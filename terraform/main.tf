@@ -11,3 +11,13 @@ terraform {
 provider "docker" {
   host = "unix:///var/run/docker.sock"
 }
+
+resource "docker_network" "app_network" {
+  name   = "${var.project_name}-network"
+  driver = "bridge"
+
+  labels {
+    label = "project"
+    value = var.project_name
+  }
+}
