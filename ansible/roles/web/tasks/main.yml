@@ -1,3 +1,92 @@
-- name: Placeholder
-  debug:
-    msg: "Implement web role tasks"
+---
+- name: Validate containers are running
+  block:
+    - name: Check nginx container status
+      community.docker.docker_container_info:
+        name: "{{ nginx_container_name }}"
+      register: nginx_info
+      failed_when: not nginx_info.exists or not nginx_info.container.State.Running
+
+    - name: Check php-fpm container status
+      community.docker.docker_container_info:
+        name: "{{ php_fpm_container_name }}"
+      register: php_fpm_info
+      failed_when: not php_fpm_info.exists or not php_fpm_info.container.State.Running
+  tags:
+    - always
+
+- name: Prepare web content directory
+  block:
+    - name: Ensure web content directory exists
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: "mkdir -p {{ web_root }}"
+      changed_when: false
+
+    - name: Set correct ownership
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: "chown -R {{ nginx_user_id }}:{{ nginx_group_id }} {{ web_root }}"
+      changed_when: false
+
+- name: Deploy application files
+  block:
+    - name: Copy nginx configuration
+      community.docker.docker_container_copy_into:
+        container: "{{ nginx_container_name }}"
+        content: "{{ lookup('template', 'nginx.conf.j2') }}"
+        container_path: "{{ nginx_config_dir }}/default.conf"
+        mode: "{{ config_file_mode }}"
+      notify: Reload nginx
+
+    - name: Copy PHP files to container
+      community.docker.docker_container_copy_into:
+        container: "{{ nginx_container_name }}"
+        content: "{{ lookup('template', item.src) }}"
+        container_path: "{{ web_root }}/{{ item.dest }}"
+        owner_id: "{{ nginx_user_id }}"
+        group_id: "{{ nginx_group_id }}"
+        mode: "{{ web_file_mode }}"
+      loop:
+        - { src: 'index.php.j2', dest: 'index.php' }
+        - { src: 'healthz.php.j2', dest: 'healthz.php' }
+      loop_control:
+        label: "{{ item.dest }}"
+      notify: Reload nginx
+
+    - name: Flush handlers to reload nginx now
+      meta: flush_handlers
+
+- name: Verify deployment
+  block:
+    - name: Wait for nginx to be ready
+      ansible.builtin.wait_for:
+        host: localhost
+        port: "{{ nginx_port }}"
+        timeout: "{{ health_check_timeout }}"
+      check_mode: false
+
+    - name: Test health endpoint
+      ansible.builtin.uri:
+        url: "http://localhost:{{ nginx_port }}/{{ health_check_path }}"
+        return_content: true
+        status_code: 200
+      register: health_check
+      until: health_check.status == 200
+      retries: "{{ health_check_retries }}"
+      delay: "{{ health_check_delay }}"
+      check_mode: false
+      failed_when: false
+
+    - name: Validate health check response
+      ansible.builtin.assert:
+        that:
+          - health_check.status == 200
+          - health_check.json.status == "ok"
+          - health_check.json.service == "nginx"
+        fail_msg: "Health check failed: {{ health_check.json | default('No response') }}"
+        success_msg: "Health check passed!"
+
+    - name: Display health check response
+      ansible.builtin.debug:
+        var: health_check.json
