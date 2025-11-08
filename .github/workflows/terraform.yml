@@ -3,14 +3,29 @@ on: [push, pull_request]
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-      - run: cd terraform && terraform init -input=false
-      - run: cd terraform && terraform fmt -check
-      - run: cd terraform && terraform validate
-      - run: cd terraform && terraform plan -out=tfplan
-      - uses: actions/upload-artifact@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Initialize Terraform
+        run: terraform init -input=false
+
+      - name: Check Terraform formating
+        run: terraform fmt -check
+
+      - name: Validate Terraform configuration
+        run: terraform validate
+
+      - name: Upload Terraform plan
+        run: terraform plan -out=tfplan
+
+      - name: Upload Terraform plan
+        uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: terraform/tfplan

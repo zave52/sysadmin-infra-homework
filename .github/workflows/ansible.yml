@@ -1,8 +1,10 @@
 name: Ansible
-on: [push, pull_request]
+on: [ push, pull_request ]
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ansible/ansible-lint-action@v6
+
+      - name: Run ansible-lint
+        uses: ansible/ansible-lint@v6.22.2
