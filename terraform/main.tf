@@ -65,7 +65,7 @@ resource "docker_container" "nginx" {
   }
 
   volumes {
-    host_path      = docker_volume.nginx_logs.name
+    volume_name    = docker_volume.nginx_logs.name
     container_path = "/var/log/nginx"
   }
 
