@@ -1,0 +1,14 @@
+---
+- name: Reload nginx
+  block:
+    - name: Test nginx configuration
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: nginx -t
+      changed_when: false
+
+    - name: Reload nginx service
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: nginx -s reload
+  listen: Reload nginx
