@@ -8,6 +8,7 @@ Test assignment for System Administrator position
 - Terraform (>= 1.6.0)
 - Ansible (>= 2.12)
 - Python 3.x
+- Act (optional, for local CI testing)
 
 ## Local Run
 
@@ -74,15 +75,37 @@ cd ../ansible
 ansible-playbook -i inventory/containers.ini playbooks/site.yml
 ```
 
-## CI/CD
+## CI/CD Testing
 
-GitHub Actions workflows:
+### GitHub Actions
+
+Workflows run automatically on push/pull request:
 
 - **terraform.yml**: `fmt -check`, `init`, `validate`, `plan` (uploads tfplan artifact)
-- **ansible.yml**: `ansible-lint` with community.docker collection
+- **ansible.yml**: `ansible-lint`, Molecule tests with testinfra verification
 
 [![Terraform](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/terraform.yml/badge.svg)](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/terraform.yml)
 [![Ansible](https://github.com/zave/sysadmin-infra-homework/actions/workflows/ansible.yml/badge.svg)](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/ansible.yml)
+
+### Local CI Testing with Act
+
+[Act](https://github.com/nektos/act) allows you to test GitHub Actions workflows locally before pushing to GitHub. It
+uses Docker to run the same workflow jobs that would run in GitHub Actions.
+
+Usage:
+
+```bash
+# Run all workflows
+act
+
+# Run specific workflow
+act -W .github/workflows/terraform.yml
+act -W .github/workflows/ansible.yml
+
+# Run specific job
+act -j lint
+act -j terraform
+```
 
 ## Cleanup
 
