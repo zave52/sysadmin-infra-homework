@@ -1,0 +1,5 @@
+- name: Apply web role
+  hosts: all
+  become: true
+  roles:
+    - web
