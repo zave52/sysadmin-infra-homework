@@ -1,0 +1,46 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: nginx-molecule
+    image: nginx:1.29.3
+    pre_build_image: true
+    networks:
+      - name: molecule-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - molecule-web-content:/var/www/html
+    published_ports:
+      - "9090:80"
+    command: /bin/sh -c "apt-get update && apt-get install -y curl procps && nginx -g 'daemon off;'"
+    override_command: false
+
+  - name: php-fpm-molecule
+    image: php:8.4-fpm-alpine
+    pre_build_image: true
+    networks:
+      - name: molecule-network
+    volumes:
+      - molecule-web-content:/var/www/html
+    env:
+      APP_ENV: test
+    command: php-fpm
+    override_command: false
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      localhost:
+        nginx_container_name: nginx-molecule
+        php_fpm_container_name: php-fpm-molecule
+  playbooks:
+    converge: converge.yml
+
+verifier:
+  name: testinfra
+  directory: tests/
+  options:
+    v: 1
