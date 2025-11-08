@@ -49,6 +49,19 @@ Why:
 - Configuration managed as code (Ansible)
 - Self-contained (no host dependencies)
 
+## 6. Local CI Testing with Act
+
+Choice: Document Act usage for local GitHub Actions testing
+
+Why:
+
+- Faster feedback loop (no push required)
+- Consistent behavior between local and CI environments
+- Debug complex workflows locally before pushing
+- Uses same container-based approach as GitHub runners
+
+Trade-off: Requires Docker and may have minor differences from GitHub's actual runner environment
+
 ## Future Improvements
 
 - Multi-environment configuration
