@@ -1,5 +1,11 @@
-- name: Apply web role
-  hosts: all
-  become: true
+- name: Deploy Nginx and PHP-FPM
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    project_name: "nginx-php-app"
+    nginx_port: 8080
+
   roles:
-    - web
+    - role: ../roles/web
