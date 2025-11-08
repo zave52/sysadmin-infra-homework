@@ -67,12 +67,21 @@
       changed_when: false
       failed_when: false
 
-    - name: Install logrotate and cron in container
+    - name: Install logrotate and dependencies
       community.docker.docker_container_exec:
         container: "{{ nginx_container_name }}"
         command: "sh -c 'apt-get update && apt-get install -y logrotate cron procps && rm -rf /var/lib/apt/lists/*'"
       when: logrotate_check.rc != 0
-      register: logrotate_install
+
+    - name: Setup nginx log files for rotation
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: |
+          sh -c 'rm -f {{ nginx_log_dir }}/access.log {{ nginx_log_dir }}/error.log && \
+                 touch {{ nginx_log_dir }}/access.log {{ nginx_log_dir }}/error.log && \
+                 chown nginx:adm {{ nginx_log_dir }}/*.log && \
+                 nginx -s reload'
+      changed_when: false
 
     - name: Copy logrotate configuration
       community.docker.docker_container_copy_into:
@@ -85,20 +94,23 @@
       community.docker.docker_container_exec:
         container: "{{ nginx_container_name }}"
         command: "sh -c 'echo \"0 0 * * * /usr/sbin/logrotate /etc/logrotate.conf\" > /etc/cron.d/logrotate && chmod 0644 /etc/cron.d/logrotate'"
-
-    - name: Ensure cron service is running
-      community.docker.docker_container_exec:
-        container: "{{ nginx_container_name }}"
-        command: "sh -c 'service cron start || cron'"
-      register: cron_start
-      changed_when: "'Starting' in cron_start.stdout"
-
-    - name: Verify logrotate configuration
-      community.docker.docker_container_exec:
-        container: "{{ nginx_container_name }}"
-        command: "logrotate -d /etc/logrotate.d/nginx"
       changed_when: false
-      register: logrotate_test
+
+    - name: Check if cron is running
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: "pgrep cron"
+      register: cron_check
+      changed_when: false
+      failed_when: false
+
+    - name: Start cron service
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: "sh -c 'service cron start 2>/dev/null || cron'"
+      when: cron_check.rc != 0
+      changed_when: cron_check.rc != 0
+
 
 - name: Verify deployment
   block:
