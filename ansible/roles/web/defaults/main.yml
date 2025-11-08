@@ -1,0 +1,4 @@
+---
+project_name: "nginx-php-app"
+nginx_container_name: "{{ project_name }}-nginx"
+php_fpm_container_name: "{{ project_name }}-php-fpm"
