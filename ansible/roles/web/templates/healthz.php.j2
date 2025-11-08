@@ -1,0 +1,17 @@
+<?php
+declare(strict_types=1);
+
+header('Content-Type: application/json; charset=UTF-8');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+$response = [
+  'status' => 'ok',
+  'service' => 'nginx',
+  'env' => $_ENV['APP_ENV'] ?? 'dev',
+];
+
+http_response_code(200);
+echo json_encode($response);
+exit;
