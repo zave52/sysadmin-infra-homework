@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    project_name: "molecule"
+    nginx_container_name: "nginx-molecule"
+    php_fpm_container_name: "php-fpm-molecule"
+    nginx_port: 9090
+  tasks:
+    - name: Include web role
+      ansible.builtin.include_role:
+        name: "{{ playbook_dir }}/../../"
