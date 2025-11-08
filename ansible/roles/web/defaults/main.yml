@@ -2,3 +2,11 @@
 project_name: "nginx-php-app"
 nginx_container_name: "{{ project_name }}-nginx"
 php_fpm_container_name: "{{ project_name }}-php-fpm"
+
+nginx_port: 8080
+app_env: "dev"
+
+health_check_path: "healthz"
+health_check_timeout: 30
+health_check_retries: 3
+health_check_delay: 2

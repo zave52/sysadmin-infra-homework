@@ -1,0 +1,10 @@
+---
+nginx_user_id: 101
+nginx_group_id: 101
+
+config_file_mode: 0644
+web_file_mode: 0644
+
+web_root: "/var/www/html"
+nginx_config_dir: "/etc/nginx/conf.d"
+nginx_log_dir: "/var/log/nginx"
