@@ -1,0 +1,13 @@
+{{ nginx_log_dir }}/*.log {
+  daily
+  missingok
+  rotate 14
+  compress
+  delaycompress
+  notifempty
+  create 0640 nginx adm
+  sharedscripts
+  postrotate
+    nginx -s reopen > /dev/null 2>&1 || true
+  endscript
+}

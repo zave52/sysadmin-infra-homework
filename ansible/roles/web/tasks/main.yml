@@ -57,6 +57,49 @@
     - name: Flush handlers to reload nginx now
       meta: flush_handlers
 
+- name: Configure logrotate in container
+  block:
+    - name: Check if logrotate is installed
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: "which logrotate"
+      register: logrotate_check
+      changed_when: false
+      failed_when: false
+
+    - name: Install logrotate and cron in container
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: "sh -c 'apt-get update && apt-get install -y logrotate cron procps && rm -rf /var/lib/apt/lists/*'"
+      when: logrotate_check.rc != 0
+      register: logrotate_install
+
+    - name: Copy logrotate configuration
+      community.docker.docker_container_copy_into:
+        container: "{{ nginx_container_name }}"
+        content: "{{ lookup('template', 'logrotate.conf.j2') }}"
+        container_path: "/etc/logrotate.d/nginx"
+        mode: 0644
+
+    - name: Create cron job for logrotate
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: "sh -c 'echo \"0 0 * * * /usr/sbin/logrotate /etc/logrotate.conf\" > /etc/cron.d/logrotate && chmod 0644 /etc/cron.d/logrotate'"
+
+    - name: Ensure cron service is running
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: "sh -c 'service cron start || cron'"
+      register: cron_start
+      changed_when: "'Starting' in cron_start.stdout"
+
+    - name: Verify logrotate configuration
+      community.docker.docker_container_exec:
+        container: "{{ nginx_container_name }}"
+        command: "logrotate -d /etc/logrotate.d/nginx"
+      changed_when: false
+      register: logrotate_test
+
 - name: Verify deployment
   block:
     - name: Wait for nginx to be ready
