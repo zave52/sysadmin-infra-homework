@@ -1,42 +1,98 @@
-# Test: Nginx + PHP-FPM, Terraform, Ansible
+# Nginx + PHP-FPM, Terraform, Ansible
 
-This repository is a **template** for completing the test assignment. Full description is in [INSTRUCTIONS.md](./INSTRUCTIONS.md).
+Test assignment for System Administrator position
 
-## What's already included
-- Directory structure for Terraform/Ansible.
-- Basic GitHub Actions workflows: `terraform.yml`, `ansible.yml`.
-- Template files for `web` role (Ansible) and minimal Terraform configs.
+## Prerequisites
 
-## What the candidate needs to implement (briefly)
-1. **Terraform**: describe `nginx` and `php-fpm` containers (docker provider), network and volume, variables and outputs.
-2. **Ansible**: `web` role should deploy Nginx config, index.php, enable `nginx` and `php-fpm`, add logrotate.
-3. Clean up and complete workflows (fmt/validate/plan + ansible-lint), optionally add Molecule tests for the role.
-4. **README**: complete the steps below for running and testing (see "Local Run" section).
+- Docker
+- Terraform (>= 1.6.0)
+- Ansible (>= 2.12)
+- Python 3.x
 
----
+## Local Run
 
-## Local Run (to be filled after completion)
+### 1. Deploy Infrastructure
+
 ```bash
-# example
 cd terraform
 terraform init
 terraform apply -auto-approve
+```
 
+### 2. Configure with Ansible
+
+```bash
+cd ../ansible
+ansible-galaxy collection install -r requirements.yml
+ansible-playbook -i inventory/containers.ini playbooks/site.yml
+```
+
+### 3. Testing
+
+```bash
+curl http://localhost:8080/healthz
+
+# Expected response:
+# {"status":"ok","service":"nginx","env":"dev"}
+
+curl http://localhost:8080/
+```
+
+## Verification
+
+### Containers Running
+
+```bash
+docker ps --filter "name=nginx-php-app"
+```
+
+### Logrotate Configuration
+
+```bash
+# Check logrotate installed
+docker exec nginx-php-app-nginx which logrotate
+
+# Check cron running
+docker exec nginx-php-app-nginx pgrep cron
+
+# View configuration
+docker exec nginx-php-app-nginx cat /etc/logrotate.d/nginx
+
+# Test rotation
+docker exec nginx-php-app-nginx logrotate -f /etc/logrotate.conf
+docker exec nginx-php-app-nginx ls -la /var/log/nginx/
+```
+
+### Idempotency
+
+```bash
+cd terraform
+terraform apply -auto-approve
+
+# Ansible - second run should show changed=0
 cd ../ansible
 ansible-playbook -i inventory/containers.ini playbooks/site.yml
 ```
 
-### Testing
+## CI/CD
+
+GitHub Actions workflows:
+
+- **terraform.yml**: `fmt -check`, `init`, `validate`, `plan` (uploads tfplan artifact)
+- **ansible.yml**: `ansible-lint` with community.docker collection
+
+[![Terraform](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/terraform.yml/badge.svg)](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/terraform.yml)
+[![Ansible](https://github.com/zave/sysadmin-infra-homework/actions/workflows/ansible.yml/badge.svg)](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/ansible.yml)
+
+## Cleanup
+
 ```bash
-curl http://localhost:8080/healthz
-# expected JSON:
-# {"status":"ok","service":"nginx","env":"dev"}
+cd terraform
+terraform destroy -auto-approve
 ```
 
-## CI/CD
-- **Actions** tab should be green: Terraform (fmt/validate/plan) and ansible-lint pass.
-- Attach screenshots or links to successful runs.
+## Links
 
-## Useful Links
-- Full task description: [INSTRUCTIONS.md](./INSTRUCTIONS.md)
-- Solution rationale: `Decisions.md`
+- Task description: [INSTRUCTIONS.md](./INSTRUCTIONS.md)
+- Design decisions: [Decisions.md](./Decisions.md)
+
