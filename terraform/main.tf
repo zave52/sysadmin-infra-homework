@@ -62,5 +62,36 @@ resource "docker_container" "nginx" {
     value = var.project_name
   }
 
-  depends_on = []
+  depends_on = [docker_container.php_fpm]
+}
+
+resource "docker_image" "php-fpm" {
+  name         = "php:8.4-fpm-alpine"
+  keep_locally = false
+}
+
+
+resource "docker_container" "php_fpm" {
+  name  = "${var.project_name}-php-fpm"
+  image = docker_image.php-fpm.image_id
+
+  networks_advanced {
+    name = docker_network.app_network.name
+  }
+
+  volumes {
+    volume_name    = docker_volume.web_content.name
+    container_path = "/var/www/html"
+  }
+
+  env = [
+    "APP_ENV=${var.app_env}"
+  ]
+
+  restart = "unless-stopped"
+
+  labels {
+    label = "project"
+    value = var.project_name
+  }
 }
