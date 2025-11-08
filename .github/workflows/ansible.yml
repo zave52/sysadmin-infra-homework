@@ -48,11 +48,6 @@ jobs:
         with:
           python-version: "3.13.x"
 
-      - name: Ensure Docker is running
-        run: |
-          sudo systemctl start docker
-          sudo chmod 666 /var/run/docker.sock
-
       - name: Install Molecule
         run: |
           pip install -r ansible/requirements-dev.txt
