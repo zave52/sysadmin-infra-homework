@@ -1,5 +1,5 @@
 name: Terraform
-on: [push, pull_request]
+on: [ push, pull_request ]
 jobs:
   terraform:
     runs-on: ubuntu-latest
