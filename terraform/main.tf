@@ -31,8 +31,17 @@ resource "docker_volume" "web_content" {
   }
 }
 
+resource "docker_volume" "nginx_logs" {
+  name = "${var.project_name}-nginx-logs"
+
+  labels {
+    label = "project"
+    value = var.project_name
+  }
+}
+
 resource "docker_image" "nginx" {
-  name         = "nginx:1.29.3-alpine"
+  name         = "nginx:1.29.3"
   keep_locally = false
 }
 
@@ -53,6 +62,11 @@ resource "docker_container" "nginx" {
   volumes {
     volume_name    = docker_volume.web_content.name
     container_path = "/var/www/html"
+  }
+
+  volumes {
+    host_path      = docker_volume.nginx_logs.name
+    container_path = "/var/log/nginx"
   }
 
   restart = "unless-stopped"
