@@ -1,14 +1,23 @@
 ---
-- name: Reload nginx
-  block:
-    - name: Test nginx configuration
-      community.docker.docker_container_exec:
-        container: "{{ nginx_container_name }}"
-        command: nginx -t
-      changed_when: false
+- name: Test nginx configuration
+  community.docker.docker_container_exec:
+    container: "{{ nginx_container_name }}"
+    command: nginx -t
+  changed_when: false
+  listen: Reload nginx
 
-    - name: Reload nginx service
-      community.docker.docker_container_exec:
-        container: "{{ nginx_container_name }}"
-        command: nginx -s reload
-      listen: Reload nginx
+- name: Check if nginx PID file exists and is valid
+  community.docker.docker_container_exec:
+    container: "{{ nginx_container_name }}"
+    command: sh -c "test -s /run/nginx.pid && cat /run/nginx.pid | grep -E '^[0-9]+$'"
+  register: nginx_pid_check
+  changed_when: false
+  failed_when: false
+  listen: Reload nginx
+
+- name: Reload nginx service
+  community.docker.docker_container_exec:
+    container: "{{ nginx_container_name }}"
+    command: "{{ 'nginx -s reload' if nginx_pid_check.rc == 0 else 'pkill -HUP nginx' }}"
+  changed_when: true
+  listen: Reload nginx

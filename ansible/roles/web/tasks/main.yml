@@ -34,7 +34,7 @@
     - name: Copy nginx configuration
       community.docker.docker_container_copy_into:
         container: "{{ nginx_container_name }}"
-        content: "{{ lookup('template', 'nginx.conf.j2') }}"
+        content: "{{ lookup('template', role_path + '/templates/nginx.conf.j2') }}"
         container_path: "{{ nginx_config_dir }}/default.conf"
         mode: "{{ config_file_mode }}"
       notify: Reload nginx
@@ -42,7 +42,7 @@
     - name: Copy PHP files to container
       community.docker.docker_container_copy_into:
         container: "{{ nginx_container_name }}"
-        content: "{{ lookup('template', item.src) }}"
+        content: "{{ lookup('template', role_path + '/templates/' + item.src) }}"
         container_path: "{{ web_root }}/{{ item.dest }}"
         owner_id: "{{ nginx_user_id }}"
         group_id: "{{ nginx_group_id }}"
@@ -86,7 +86,7 @@
     - name: Copy logrotate configuration
       community.docker.docker_container_copy_into:
         container: "{{ nginx_container_name }}"
-        content: "{{ lookup('template', 'logrotate.conf.j2') }}"
+        content: "{{ lookup('template', role_path + '/templates/logrotate.conf.j2') }}"
         container_path: "/etc/logrotate.d/nginx"
         mode: 0644
 
