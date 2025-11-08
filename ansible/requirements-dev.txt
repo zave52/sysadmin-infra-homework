@@ -1,3 +1,4 @@
-molecule[docker]>=25.0.0
+molecule>=25.0.0
+molecule-plugins[docker]>=24.0.0
 ansible-core>=2.15.0
 pytest-testinfra>=10.0.0
