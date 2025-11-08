@@ -85,7 +85,7 @@ Workflows run automatically on push/pull request:
 - **ansible.yml**: `ansible-lint`, Molecule tests with testinfra verification
 
 [![Terraform](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/terraform.yml/badge.svg)](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/terraform.yml)
-[![Ansible](https://github.com/zave/sysadmin-infra-homework/actions/workflows/ansible.yml/badge.svg)](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/ansible.yml)
+[![Ansible](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/ansible.yml/badge.svg)](https://github.com/zave52/sysadmin-infra-homework/actions/workflows/ansible.yml)
 
 ### Local CI Testing with Act
 
