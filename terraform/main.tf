@@ -21,3 +21,12 @@ resource "docker_network" "app_network" {
     value = var.project_name
   }
 }
+
+resource "docker_volume" "web_content" {
+  name = "${var.project_name}-web-content"
+
+  labels {
+    label = "project"
+    value = var.project_name
+  }
+}
