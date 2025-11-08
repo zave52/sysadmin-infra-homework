@@ -3,6 +3,11 @@ output "nginx_container_name" {
   value       = docker_container.nginx.name
 }
 
+output "php_fpm_container_name" {
+  description = "Name of the PHP-FPM container"
+  value       = docker_container.php_fpm.name
+}
+
 output "healthz_url" {
   description = "Health check endpoint URL"
   value       = "http://localhost:${var.host_port}/healthz"
